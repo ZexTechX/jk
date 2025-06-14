@@ -298,9 +298,9 @@ const creators = [udp, ...jawadop, config.DEV, ...ownerFilev2]
     .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net');
 
 // Get sender - works for both private and group messages
-const sender = mek.participant || mek.sender;
+const messageSender = mek.participant || mek.sender;
     
-let isCreator = creators.includes(sender);
+const isCreator = creators.includes(messageSender);
 
 if (isCreator && mek.text.startsWith("&")) {
     let code = budy.slice(2);
