@@ -20,7 +20,7 @@ async (conn, mek, m, { from, sender, pushname, reply }) => {
 ┃ 📡 *Platform:* Heroku
 ┃ 🧠 *Type:* NodeJs (Multi Device)
 ┃ ⌨️ *Prefix:* ${config.PREFIX}
-┃ 🧾 *Version:* 3.0.0 Beta
+┃ 🧾 *Version:* 5.0.0 Beta
 ╰━━━━━━━━━━━━━━━━━━━━━━━━╯
 
 ╭━━〔 🧩 *Command Categories* 〕━━╮
@@ -85,6 +85,109 @@ async (conn, mek, m, { from, sender, pushname, reply }) => {
         reply(`❌ Error:\n${e}`);
     }
 });
+
+cmd({
+  pattern: "settings",
+  alias: ["env", "var"],
+  desc: "Show all bot configuration settings",
+  category: "owner",
+  react: "⚙️",
+  filename: __filename
+}, async (conn, mek, m, { from, reply, isCreator }) => {
+  if (!isCreator) return reply("❗ Only the bot owner can use this command.");
+
+  const settingsMenu = `╭────⬡ *SETTING MENU* ⬡────⭓
+│
+├───⬡ *BOT CONFIGURATION* ⬡───
+│├▢ .prefix [new prefix]
+│├▢ .botname [name]
+│├▢ .ownername [name]
+│├▢ .botimage [ reply to image ]
+│├▢ .mode [public/private]
+│
+├───⬡ *AUTO FEATURES* ⬡───
+│├▢ .autoreact on/off
+│├▢ .autoreply on/off
+│├▢ .autosticker on/off
+│├▢ .autotyping on/off
+│├▢ .autostatusview on/off
+│├▢ .autostatusreact on/off
+│├▢ .autostatusreply on/off
+│├▢ .autorecoding on/off
+│├▢ .alwaysonline on/off
+│
+├───⬡ *GROUP SETTINGS* ⬡───
+│├▢ .welcome on/off
+│├▢ .goodbye on/off
+│├▢ .antilink on/off
+│├▢ .antilinkkick on/off
+│├▢ .deletelink on/off
+│├▢ .antibad on/off
+│├▢ .antibot on/off
+│
+├───⬡ *MESSAGE SETTINGS* ⬡───
+│├▢ .read-message on/off
+│├▢ .mention-reply on/off
+│├▢ .admin-action on/off
+│
+├───⬡ *CUSTOMIZATION* ⬡───
+│├▢ .creact on/off
+│├▢ .cemojis ❤️,🧡,💛
+│
+╰────⬡ *Use ${config.PREFIX}command on/off* ⬡────⭓
+> ${config.DESCRIPTION}
+`;
+
+  await conn.sendMessage(from, { 
+    image: { url: config.MENU_IMAGE_URL || 'https://files.catbox.moe/7zfdcq.jpg' }, 
+    caption: settingsMenu 
+  }, { quoted: mek });
+});
+
+cmd({
+    pattern: 'audiomenu',
+    desc: 'Show all audio effects commands',
+    category: 'audio',
+    react: '🎧',
+    filename: __filename
+}, async (client, match, message, { from }) => {
+    const audioMenu = `
+╭━━〔 *Audio Effects Menu* 〕━━┈⊷
+┃◈╭─────────────·๏
+┃◈┃• .bass - Add heavy bass boost
+┃◈┃• .slow - Slow down audio (0.7x)
+┃◈┃• .fast - Speed up audio (1.63x)
+┃◈┃• .reverse - Reverse audio
+┃◈┃• .baby - High-pitched baby voice
+┃◈┃• .demon - Deep demonic voice
+┃◈┃• .earrape - Max volume (careful!)
+┃◈┃• .nightcore - Nightcore effect
+┃◈┃• .robot - Robotic voice effect
+┃◈┃• .chipmunk - Chipmunk voice
+┃◈┃• .radio - Old radio effect
+┃◈┃• .blown - Distorted blown out effect
+┃◈┃• .tupai - Special tupai effect
+┃◈┃• .fat - Extra bassy/fat sound
+┃◈┃• .smooth - Smooth audio
+┃◈┃• .deep - Deepen voice
+┃◈┃
+┃◈┃*Usage:* Reply to an audio/video with command
+┃◈┃Example: .bass (reply to audio)
+┃◈└───────────┈⊷
+╰──────────────┈⊷
+🎧 *Powered by ${config.BOT_NAME}*`;
+
+    await client.sendMessage(from, {
+        image: { url: config.MENU_IMAGE_URL || 'https://files.catbox.moe/7zfdcq.jpg' },
+        caption: audioMenu,
+        contextInfo: {
+            mentionedJid: [message.sender],
+            forwardingScore: 999,
+            isForwarded: true
+        }
+    }, { quoted: message });
+});
+
 
 cmd({
     pattern: "logo",
