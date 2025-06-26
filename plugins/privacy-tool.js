@@ -161,35 +161,6 @@ async (conn, mek, m, { from, l, quoted, body, isCmd, command, args, q, isGroup, 
 });
 
 cmd({
-    pattern: "setpp",
-    desc: "Set bot profile picture.",
-    category: "privacy",
-    react: "🖼️",
-    filename: __filename
-},
-async (conn, mek, m, { from, isOwner, quoted, reply }) => {
-    if (!isOwner) return reply("❌ You are not the owner!");
-    if (!quoted || !quoted.message.imageMessage) return reply("❌ Please reply to an image.");
-    try {
-        const stream = await downloadContentFromMessage(quoted.message.imageMessage, 'image');
-        let buffer = Buffer.from([]);
-        for await (const chunk of stream) {
-            buffer = Buffer.concat([buffer, chunk]);
-        }
-
-        const mediaPath = path.join(__dirname, `${Date.now()}.jpg`);
-        fs.writeFileSync(mediaPath, buffer);
-
-        // Update profile picture with the saved file
-        await conn.updateProfilePicture(conn.user.jid, { url: `file://${mediaPath}` });
-        reply("🖼️ Profile picture updated successfully!");
-    } catch (error) {
-        console.error("Error updating profile picture:", error);
-        reply(`❌ Error updating profile picture: ${error.message}`);
-    }
-});
-
-cmd({
     pattern: "setmyname",
     desc: "Set your WhatsApp display name.",
     category: "privacy",
@@ -296,32 +267,48 @@ async (conn, mek, m, { from, l, quoted, body, isCmd, command, args, q, isGroup, 
         l(e);
     }
 });
+
 cmd({
     pattern: "getpp",
-    desc: "Fetch the profile picture of a tagged or replied user.",
+    alias: ["stealpp"],
+    react: "⤵️",
+    desc: "Sends the profile picture of a user by phone number (owner only)",
     category: "owner",
+    use: ".getpp <phone number>",
     filename: __filename
-}, async (conn, mek, m, { quoted, isGroup, sender, participants, reply }) => {
+},
+async (conn, mek, m, { from, prefix, l, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
     try {
-        // Determine the target user
-        const targetJid = quoted ? quoted.sender : sender;
+        if (!isCreator) return reply("Only the owner can use this command.");
 
-        if (!targetJid) return reply("⚠️ Please reply to a message to fetch the profile picture.");
+        if (!args[0]) return reply("Please provide a phone number.");
 
-        // Fetch the user's profile picture URL
-        const userPicUrl = await conn.profilePictureUrl(targetJid, "image").catch(() => null);
+        let targetJid = args[0].replace(/[^0-9]/g, "") + "@s.whatsapp.net";
 
-        if (!userPicUrl) return reply("⚠️ No profile picture found for the specified user.");
+        let ppUrl;
+        try {
+            ppUrl = await conn.profilePictureUrl(targetJid, "image");
+        } catch (e) {
+            return reply("This user has no profile picture or it cannot be accessed.");
+        }
 
-        // Send the user's profile picture
-        await conn.sendMessage(m.chat, {
-            image: { url: userPicUrl },
-            caption: "🖼️ Here is the profile picture of the specified user."
+        let userName = targetJid.split("@")[0];
+        try {
+            const contact = await conn.getContact(targetJid);
+            userName = contact.notify || contact.vname || userName;
+        } catch {
+            // keep default number as fallback
+        }
+
+        await conn.sendMessage(from, { 
+            image: { url: ppUrl }, 
+            caption: `> Profile Picture Fetched Successfully.\n> Powered by KHAN MD 🤍`
         });
+
+        await conn.sendMessage(from, { react: { text: "✅", key: mek.key } });
+
     } catch (e) {
-        console.error("Error fetching user profile picture:", e);
-        reply("❌ An error occurred while fetching the profile picture. Please try again later.");
+        reply("An error occurred while fetching the profile picture. Please try again later.");
+        l(e);
     }
 });
-
-          
